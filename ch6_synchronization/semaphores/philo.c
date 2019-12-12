@@ -31,28 +31,27 @@ void *philo(void *arg) {
 	int i = (uintptr_t)arg;
 	printf("philo thinking: %d\n",i);
 	while (1) {
-		usleep(random() % 200000); // thinking
+		usleep(random() % 200000);
 		semaphore_P(stick[i]);
 		//usleep(100000);
 		semaphore_P(stick[(i+1)%5]);
 		philo_status[i] = 'E';
 		printf("philo eating:   %d |%s|\n",i,philo_status);
-		usleep(random() % 200000); // Eating
+		usleep(random() % 200000);
 		philo_status[i] = 'T';
 		printf("philo thinking: %d |%s|\n",i,philo_status);
 		semaphore_V(stick[i]);
 		semaphore_V(stick[(i+1)%5]);
-
 	}
 }
 
 int main(int argc, char *argv[]) {
 	int i;
 	pthread_t philo_t[5];
-	srandom(time(NULL)); // inizializza il seed del random
+	srandom(time(NULL));
 	for (i=0; i<5; i++)
-		stick[i]=semaphore_create(1); //un semaforo per ogni stick	
-	for (i=0; i<5; i++) //attiva ognuno dei 5 processi	
+		stick[i]=semaphore_create(1);
+	for (i=0; i<5; i++)
 		pthread_create(&philo_t[i], NULL, philo, (void *)(uintptr_t) i);
 	for (i=0; i<5; i++)
 		pthread_join(philo_t[i], NULL);

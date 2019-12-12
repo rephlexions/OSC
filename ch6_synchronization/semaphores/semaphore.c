@@ -17,28 +17,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; If not, see <http://www.gnu.org/licenses/>.
  *                   
- */                   
+ */
 
-#include<stdio.h>
-#include<pthread.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<suspend.h>
-#include<tlist.h>
-#include<semaphore.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <suspend.h>
+#include <tlist.h>
+#include <semaphore.h>
 
 #define mutex_in(X) pthread_mutex_lock(X)
 #define mutex_out(X) pthread_mutex_unlock(X)
 
-struct semaphore {
+struct semaphore
+{
 	volatile long value;
 	pthread_mutex_t lock;
 	struct tlist *q;
 };
 
-semaphore semaphore_create(long initval) {
+semaphore semaphore_create(long initval)
+{
 	semaphore s = malloc(sizeof(*s));
-	if (s) {
+	if (s)
+	{
 		s->value = initval;
 		s->q = NULL;
 		pthread_mutex_init(&s->lock, NULL);
@@ -46,26 +49,34 @@ semaphore semaphore_create(long initval) {
 	return s;
 }
 
-void semaphore_destroy(semaphore s) {
+void semaphore_destroy(semaphore s)
+{
 	pthread_mutex_destroy(&s->lock);
 	free(s);
 }
 
-void semaphore_P(semaphore s) {
+// Wait aka Proberen
+void semaphore_P(semaphore s)
+{
 	mutex_in(&s->lock);
-	if (s->value <= 0) {
+	if (s->value <= 0)
+	{
 		tlist_enqueue(&s->q, pthread_self());
 		mutex_out(&s->lock);
 		suspend();
-	} else {
+	}
+	else
+	{
 		s->value--;
 		mutex_out(&s->lock);
 	}
 }
 
-void semaphore_V(semaphore s) {
+// Signal aka Verhogen
+void semaphore_V(semaphore s)
+{
 	mutex_in(&s->lock);
-	if (tlist_empty(s->q)) 
+	if (tlist_empty(s->q))
 		s->value++;
 	else
 		wakeup(tlist_dequeue(&s->q));

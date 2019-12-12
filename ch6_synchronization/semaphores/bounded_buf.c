@@ -17,55 +17,59 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; If not, see <http://www.gnu.org/licenses/>.
  *                   
- */                   
+ */
 
-#include<stdio.h>
-#include<pthread.h>
-#include<semaphore.h>
+#include <stdio.h>
+#include <pthread.h>
+#include <semaphore.h>
 
 #define SIZE 10
-semaphore full;
-semaphore empty;
+semaphore canRead;
+semaphore canWrite;
 volatile int buffer[SIZE];
 volatile int front;
 volatile int rear;
 
-void *producer(void *arg) {
-	while (1) {
+void *producer(void *arg)
+{
+	while (1)
+	{
 		int value;
 		usleep(random() % 2000000);
 		value = random() % 32768;
-		printf("produced: %d\n",value);
-		semaphore_P(empty);
+		printf("produced: %d\n", value);
+		semaphore_P(canWrite);
 		buffer[front] = value;
 		front = (front + 1) % SIZE;
-		semaphore_V(full);
-		printf("sent: %d\n",value);
+		semaphore_V(canRead);
+		printf("sent: %d\n", value);
 	}
 }
 
-void *consumer(void *arg) {
-	while (1) {
+void *consumer(void *arg)
+{
+	while (1)
+	{
 		int value;
 		printf("\t\tconsumer ready\n");
-		semaphore_P(full);
+		semaphore_P(canRead);
 		value = buffer[rear];
 		rear = (rear + 1) % SIZE;
-		semaphore_V(empty);
+		semaphore_V(canWrite);
 		printf("\t\tconsume %d\n", value);
 		usleep(random() % 2000000);
 	}
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
 	pthread_t prod_t;
 	pthread_t cons_t;
-	full=semaphore_create(0);
-	empty=semaphore_create(SIZE);
+	canRead = semaphore_create(0);
+	canWrite = semaphore_create(SIZE);
 	srandom(time(NULL));
 	pthread_create(&prod_t, NULL, producer, NULL);
 	pthread_create(&cons_t, NULL, consumer, NULL);
 	pthread_join(prod_t, NULL);
 	pthread_join(cons_t, NULL);
 }
-

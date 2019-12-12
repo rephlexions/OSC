@@ -1,5 +1,6 @@
 CFLAGS=-I.
-LDFLAGS=-lpthread
+# use -pthread instead of -lpthread
+LDFLAGS=-pthread
 ALL= prod_cons bounded_buf philo bounded_buf_mon
 
 all: $(ALL)
